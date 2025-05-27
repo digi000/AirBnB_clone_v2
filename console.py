@@ -10,6 +10,7 @@ from models.state import State
 from models.city import City
 from models.amenity import Amenity
 from models.review import Review
+from os import getenv
 
 
 class HBNBCommand(cmd.Cmd):
@@ -73,7 +74,7 @@ class HBNBCommand(cmd.Cmd):
                 pline = pline[2].strip()  # pline is now str
                 if pline:
                     # check for *args or **kwargs
-                    if pline[0] is '{' and pline[-1] is'}'\
+                    if pline[0] == '{' and pline[-1] =='}'\
                             and type(eval(pline)) is dict:
                         _args = pline
                     else:
@@ -123,13 +124,12 @@ class HBNBCommand(cmd.Cmd):
             return
         
         new_instance = HBNBCommand.classes[args.split()[0]]()
+
         i = 1
         while i < len(args.split()):
             holder = args.split()
             key, value = holder[i].split('=')
-            print(f"k: {key} || v: {value}")
             vh = value.split('"')
-            print(f"gh: {vh}")
             if value.startswith('"') and value.endswith('"'):
                 fg = value.split('"')[1].replace('_', ' ')
                 setattr(new_instance, key, fg)
@@ -139,6 +139,11 @@ class HBNBCommand(cmd.Cmd):
                 else:
                     setattr(new_instance, key, int(value))
             i += 1
+        if getenv("HBNB_TYPE_STORAGE") == 'db':
+            print(new_instance.id)
+            storage.new(new_instance)
+            storage.save()
+            return
         storage.save()
         print(new_instance.id)
         storage.save()
@@ -217,18 +222,25 @@ class HBNBCommand(cmd.Cmd):
     def do_all(self, args):
         """ Shows all objects, or all objects of a class"""
         print_list = []
-
-        if args:
-            args = args.split(' ')[0]  # remove possible trailing args
-            if args not in HBNBCommand.classes:
-                print("** class doesn't exist **")
-                return
-            for k, v in storage._FileStorage__objects.items():
-                if k.split('.')[0] == args:
+        
+        if getenv("HBNB_TYPE_STORAGE") != 'db':
+            if args:
+                args = args.split(' ')[0]  # remove possible trailing args
+                if args not in HBNBCommand.classes:
+                    print("** class doesn't exist **")
+                    return
+                for k, v in storage._FileStorage__objects.items():
+                    if k.split('.')[0] == args:
+                        print_list.append(str(v))
+            else:
+                for k, v in storage._FileStorage__objects.items():
                     print_list.append(str(v))
         else:
-            for k, v in storage._FileStorage__objects.items():
-                print_list.append(str(v))
+            print(f"ll:: {args}")
+            objs = storage.all(args)
+            print(f"objs: {objs}")
+            for my_model in objs.values():
+                print_list.append(str(my_model))
 
         print(print_list)
 
@@ -289,7 +301,7 @@ class HBNBCommand(cmd.Cmd):
                 args.append(v)
         else:  # isolate args
             args = args[2]
-            if args and args[0] is '\"':  # check for quoted arg
+            if args and args[0] == '\"':  # check for quoted arg
                 second_quote = args.find('\"', 1)
                 att_name = args[1:second_quote]
                 args = args[second_quote + 1:]
@@ -297,10 +309,10 @@ class HBNBCommand(cmd.Cmd):
             args = args.partition(' ')
 
             # if att_name was not quoted arg
-            if not att_name and args[0] is not ' ':
+            if not att_name and args[0] != ' ':
                 att_name = args[0]
             # check for quoted val arg
-            if args[2] and args[2][0] is '\"':
+            if args[2] and args[2][0] == '\"':
                 att_val = args[2][1:args[2].find('\"', 1)]
 
             # if att_val was not quoted arg

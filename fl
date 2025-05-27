@@ -1,0 +1,4 @@
+rm mn.py
+touch mn.py
+chmod +x mn.py
+vim mn.py
