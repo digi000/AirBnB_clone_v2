@@ -236,9 +236,7 @@ class HBNBCommand(cmd.Cmd):
                 for k, v in storage._FileStorage__objects.items():
                     print_list.append(str(v))
         else:
-            print(f"ll:: {args}")
             objs = storage.all(args)
-            print(f"objs: {objs}")
             for my_model in objs.values():
                 print_list.append(str(my_model))
 
