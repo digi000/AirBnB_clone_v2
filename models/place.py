@@ -3,6 +3,7 @@
 from models.base_model import BaseModel, Base
 from sqlalchemy import Column, String, Integer, Float, ForeignKey
 from sqlalchemy.orm import relationship
+from os import getenv
 
 class Place(BaseModel, Base):
     """ A place to stay """
@@ -21,3 +22,16 @@ class Place(BaseModel, Base):
 
     city = relationship("City", back_populates="places")
     user = relationship("User", back_populates="places")
+    reviews = relationship("Review", back_populates="places", cascade="all, delete")
+
+    if getenv("HBNB_TYPE_STORAGE") != 'db':
+        @property
+        def reviews(self):
+            """Returns the list of Review instances with place_id equals to current Place.id (FileStorage only)"""
+            from models import storage
+            from models.review import Review
+            review_list = []
+            for review in storage.all(Review).values():
+                if review.place_id == self.id:
+                    review_list.append(review)
+            return review_list
