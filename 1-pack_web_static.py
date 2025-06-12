@@ -1,9 +1,12 @@
+#!/usr/bin/python3
+"""1. Compress before sending"""
 from fabric.api import local
 from datetime import datetime
 from os import makedirs
 from os.path import exists
 
 def do_pack():
+    """1. Compress before sending"""
     try:
         if not exists("versions"):
             makedirs("versions")
