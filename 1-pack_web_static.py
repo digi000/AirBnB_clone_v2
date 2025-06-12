@@ -1,13 +1,15 @@
-from fabric import task
+from fabric.api import local
 from datetime import datetime
-from pathlib import Path
+from os import makedirs
+from os.path import exists
 
-def do_pack(c):
+def do_pack():
     try:
-        Path("versions").mkdir(exist_ok=True)
+        if not exists("versions"):
+            makedirs("versions")
         now = datetime.now().strftime("%Y%m%d%H%M%S")
-        ac_name = f"versions/web_static_{now}.tgz"
-        c.local(f"tar -czvf {ac_name} web_static")
+        ac_name = "versions/web_static_{}.tgz".format(now)
+        local("tar -czvf {} web_static".format(ac_name))
         return ac_name
     except Exception:
         return None
