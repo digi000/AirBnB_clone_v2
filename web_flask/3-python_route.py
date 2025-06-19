@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+"""3. Python is cool!"""
+
 from flask import Flask
 
 app = Flask(__name__)
