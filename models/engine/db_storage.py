@@ -35,7 +35,15 @@ class DBStorage:
     def all(self, cls=None):
         obj_dict = {}
         if cls:
-            objs = self.__session.query(type(self).classes[cls]).all()
+            if isinstance(cls, str):
+                cls_obj = type(self).classes.get(cls)
+            else:
+                cls_obj = cls
+            # If we still can't find it, return empty
+            if cls_obj is None:
+                return obj_dict
+            # Query the class
+            objs = self.__session.query(cls_obj).all()
             for obj in objs:
                 key = f"{type(obj).__name__}.{obj.id}"
                 obj_dict[key] = obj
@@ -58,5 +66,8 @@ class DBStorage:
         from models.city import City
         from models.state import State
         Base.metadata.create_all(self.__engine)
-        Session = scoped_session(sessionmaker(bind=self.__engine, expire_on_commit=False))
-        self.__session = Session()
+        #Session = scoped_session(sessionmaker(bind=self.__engine, expire_on_commit=False))
+        self.__session = scoped_session(sessionmaker(bind=self.__engine, expire_on_commit=False))
+
+    def close(self):
+        self.__session.remove()

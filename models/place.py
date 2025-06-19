@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """ Place Module for HBNB project """
 from models.base_model import BaseModel, Base
-from sqlalchemy import Column, String, Integer, Float, ForeignKey
+from sqlalchemy import Column, String, Table, Integer, Float, ForeignKey
 from sqlalchemy.orm import relationship
 from os import getenv
 
@@ -22,9 +22,11 @@ class Place(BaseModel, Base):
 
     city = relationship("City", back_populates="places")
     user = relationship("User", back_populates="places")
-    reviews = relationship("Review", back_populates="places", cascade="all, delete")
+    amenities  =relationship("Amenity", secondary="place_amenity", back_populates="places")
 
-    if getenv("HBNB_TYPE_STORAGE") != 'db':
+    if getenv("HBNB_TYPE_STORAGE") == 'db':
+        reviews = relationship("Review", back_populates="place", cascade="all, delete")
+    else:
         @property
         def reviews(self):
             """Returns the list of Review instances with place_id equals to current Place.id (FileStorage only)"""
@@ -35,3 +37,8 @@ class Place(BaseModel, Base):
                 if review.place_id == self.id:
                     review_list.append(review)
             return review_list
+
+place_amenity = Table("place_amenity", Base.metadata,
+    Column("place_id", String(60), ForeignKey('places.id'), primary_key=True, nullable=False),
+    Column("amenity_id", String(60), ForeignKey('amenities.id'), primary_key=True, nullable=False)
+    )
